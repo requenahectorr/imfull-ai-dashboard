@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Histórico</title>
+</head>
+<body>
+
+    <h1>Histórico de Análisis</h1>
+    <h2>Resumen</h2>
+
+    <p><strong>Total análisis:</strong> {{ total_analisis }}</p>
+    <p><strong>Nivel de riesgo actual:</strong>
+    {% if ultimo_nivel == "BAJO" %}
+        <span style="color:green;"><strong>{{ ultimo_nivel }}</strong></span>
+    {% elif ultimo_nivel == "MODERADO" %}
+        <span style="color:orange;"><strong>{{ ultimo_nivel }}</strong></span>
+    {% elif ultimo_nivel == "ALTO" %}
+        <span style="color:red;"><strong>{{ ultimo_nivel }}</strong></span>
+    {% elif ultimo_nivel == "CRÍTICO" %}
+        <span style="color:darkred;"><strong>{{ ultimo_nivel }}</strong></span>
+    {% else %}
+        {{ ultimo_nivel }}
+    {% endif %}
+</p>
+    <p>
+    <strong>Problema más frecuente histórico:</strong>
+    {{ problema_frecuente }}
+    ({{ frecuencia_problema }} veces)
+    </p>
+
+    <p>
+    <strong>Problema dominante en los últimos 3 análisis:</strong>
+    {{ problema_reciente }}
+    </p>
+
+    <p><strong>Promedio porcentaje problema:</strong>
+    {% if promedio %}
+        {{ "%.1f"|format(promedio) }}%
+    {% else %}
+        0%
+    {% endif %}
+    </p>
+
+    <hr>
+
+    <table border="1">
+        <tr>
+            <th>Fecha</th>
+            <th>Problema</th>
+            <th>Nivel de Riesgo</th>
+            <th>Porcentaje</th>
+        </tr>
+
+        {% for fila in datos %}
+        <tr>
+            <td>{{ fila[0] }}</td>
+            <td>{{ fila[1] }}</td>
+            <td>{{ fila[2] }}</td>
+            <td>{{ "%.1f"|format(fila[3]) }}%</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</body>
+</html>
