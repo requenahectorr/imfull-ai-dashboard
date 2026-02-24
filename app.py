@@ -152,6 +152,17 @@ def dashboard():
         problema_reciente = max(conteo, key=conteo.get)
     else:
         problema_reciente = "N/A"
+
+    cursor.execute("""
+    SELECT problema_principal, COUNT(*)
+    FROM analisis
+    GROUP BY problema_principal
+    """)
+
+    datos_grafico = cursor.fetchall()
+
+    labels = [fila[0] for fila in datos_grafico]
+    valores = [fila[1] for fila in datos_grafico]
         
     conn.close()
 
@@ -163,7 +174,9 @@ def dashboard():
         ultimo_nivel=ultimo_nivel,
         problema_frecuente=problema_frecuente,
         frecuencia_problema=frecuencia_problema,
-        problema_reciente=problema_reciente
+        problema_reciente=problema_reciente,
+        labels=labels,
+        valores=valores
     )
 
 import os
