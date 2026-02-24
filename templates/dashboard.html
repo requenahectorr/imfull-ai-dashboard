@@ -2,13 +2,17 @@
 <html>
 <head>
     <title>Dashboard Histórico</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
     <h1>Histórico de Análisis</h1>
+
     <h2>Resumen</h2>
 
     <p><strong>Total análisis:</strong> {{ total_analisis }}</p>
+
     <p><strong>Nivel de riesgo actual:</strong>
     {% if ultimo_nivel == "BAJO" %}
         <span style="color:green;"><strong>{{ ultimo_nivel }}</strong></span>
@@ -21,25 +25,32 @@
     {% else %}
         {{ ultimo_nivel }}
     {% endif %}
-</p>
-    <p>
-    <strong>Problema más frecuente histórico:</strong>
-    {{ problema_frecuente }}
-    ({{ frecuencia_problema }} veces)
     </p>
 
     <p>
-    <strong>Problema dominante en los últimos 3 análisis:</strong>
-    {{ problema_reciente }}
+        <strong>Problema más frecuente histórico:</strong>
+        {{ problema_frecuente }}
+        ({{ frecuencia_problema }} veces)
     </p>
 
-    <p><strong>Promedio porcentaje problema:</strong>
-    {% if promedio %}
-        {{ "%.1f"|format(promedio) }}%
-    {% else %}
-        0%
-    {% endif %}
+    <p>
+        <strong>Problema dominante en los últimos 3 análisis:</strong>
+        {{ problema_reciente }}
     </p>
+
+    <p>
+        <strong>Promedio porcentaje problema:</strong>
+        {% if promedio %}
+            {{ "%.1f"|format(promedio) }}%
+        {% else %}
+            0%
+        {% endif %}
+    </p>
+
+    <hr>
+
+    <h2>Distribución de Problemas</h2>
+    <canvas id="graficoProblemas" width="600" height="300"></canvas>
 
     <hr>
 
@@ -61,6 +72,36 @@
         {% endfor %}
 
     </table>
+
+    <script>
+        const ctx = document.getElementById('graficoProblemas').getContext('2d');
+
+        const grafico = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ labels | tojson }},
+                datasets: [{
+                    label: 'Frecuencia de Problemas',
+                    data: {{ valores | tojson }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(75, 192, 192, 0.6)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
