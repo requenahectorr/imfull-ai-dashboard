@@ -1,18 +1,17 @@
-from database import get_connection
-from flask import Flask, render_template, request
-from database import create_tables
+from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime
-from database import create_default_hotel
+from database import get_connection, create_tables, create_default_hotel
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_cambiar_en_produccion"
 
-from database import create_tables, create_default_hotel
-
+# Crear tablas y hotel demo al iniciar
 create_tables()
 create_default_hotel()
 
-# ====== MOTOR DE ANÁLISIS (versión simplificada web) ======
+# ===============================
+# MOTOR DE ANÁLISIS
+# ===============================
 
 def analizar_reseñas_web(texto_reseñas):
 
@@ -53,7 +52,6 @@ def analizar_reseñas_web(texto_reseñas):
                 sentimientos["neutras"] += 1
 
     total = len(reseñas)
-    porcentaje_negativas = (sentimientos["negativas"] / total) * 100
 
     problema_principal = max(conteo_problemas, key=conteo_problemas.get)
     cantidad_principal = conteo_problemas[problema_principal]
@@ -78,20 +76,17 @@ def analizar_reseñas_web(texto_reseñas):
     <p><strong>Nivel de riesgo:</strong> {nivel_riesgo}</p>
     """
 
-    from database import get_connection
-
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Obtener hotel_id del hotel demo
     cursor.execute("SELECT id FROM hoteles WHERE nombre = %s;", ("Hotel Demo",))
     hotel = cursor.fetchone()
     hotel_id = hotel[0]
 
     cursor.execute("""
-    INSERT INTO analisis (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje)
-    VALUES (%s, %s, %s, %s, %s)
-""", (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje_principal))
+        INSERT INTO analisis (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje_principal))
 
     conn.commit()
     cursor.close()
@@ -100,7 +95,9 @@ def analizar_reseñas_web(texto_reseñas):
     return informe
 
 
-# ====== RUTA WEB ======
+# ===============================
+# RUTAS
+# ===============================
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -112,14 +109,18 @@ def index():
 
     return render_template("index.html", informe=informe)
 
+
 @app.route("/dashboard")
 def dashboard():
-    from database import get_connection
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT fecha, problema_principal, nivel_riesgo, porcentaje FROM analisis ORDER BY id DESC")
+    cursor.execute("""
+        SELECT fecha, problema_principal, nivel_riesgo, porcentaje
+        FROM analisis
+        ORDER BY id DESC
+    """)
     datos = cursor.fetchall()
 
     cursor.execute("SELECT COUNT(*) FROM analisis")
@@ -140,6 +141,7 @@ def dashboard():
         LIMIT 1
     """)
     resultado = cursor.fetchone()
+
     if resultado:
         problema_frecuente = resultado[0]
         frecuencia_problema = resultado[1]
@@ -155,16 +157,12 @@ def dashboard():
     """)
     ultimos = cursor.fetchall()
 
-    # Contar cuál se repite más en los últimos 3
     conteo = {}
     for fila in ultimos:
         problema = fila[0]
         conteo[problema] = conteo.get(problema, 0) + 1
 
-    if conteo:
-        problema_reciente = max(conteo, key=conteo.get)
-    else:
-        problema_reciente = "N/A"
+    problema_reciente = max(conteo, key=conteo.get) if conteo else "N/A"
 
     cursor.execute("""
         SELECT problema_principal, COUNT(*)
@@ -176,6 +174,7 @@ def dashboard():
     labels = [fila[0] for fila in datos_grafico]
     valores = [fila[1] for fila in datos_grafico]
 
+    cursor.close()
     conn.close()
 
     return render_template(
@@ -190,6 +189,7 @@ def dashboard():
         labels=labels,
         valores=valores
     )
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -214,44 +214,35 @@ def register():
 
     return render_template("register.html")
 
-    # Contar cuál se repite más en los últimos 3
-    conteo = {}
-    for fila in ultimos:
-        problema = fila[0]
-        conteo[problema] = conteo.get(problema, 0) + 1
 
-    if conteo:
-        problema_reciente = max(conteo, key=conteo.get)
-    else:
-        problema_reciente = "N/A"
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
 
-    cursor.execute("""
-    SELECT problema_principal, COUNT(*)
-    FROM analisis
-    GROUP BY problema_principal
-    """)
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    datos_grafico = cursor.fetchall()
+        cursor.execute("""
+            SELECT id, password_hash
+            FROM users
+            WHERE email = %s
+        """, (email,))
 
-    labels = [fila[0] for fila in datos_grafico]
-    valores = [fila[1] for fila in datos_grafico]
-        
-    conn.close()
+        user = cursor.fetchone()
 
-    return render_template(
-        "dashboard.html",
-        datos=datos,
-        total_analisis=total_analisis,
-        promedio=promedio,
-        ultimo_nivel=ultimo_nivel,
-        problema_frecuente=problema_frecuente,
-        frecuencia_problema=frecuencia_problema,
-        problema_reciente=problema_reciente,
-        labels=labels,
-        valores=valores
-    )
+        cursor.close()
+        conn.close()
 
-import os
+        if user and user[1] == password:
+            session["user_id"] = user[0]
+            return redirect(url_for("dashboard"))
+        else:
+            return "Credenciales incorrectas"
+
+    return render_template("login.html")
+
 
 if __name__ == "__main__":
     app.run()
