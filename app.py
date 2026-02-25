@@ -148,15 +148,48 @@ def dashboard():
         frecuencia_problema = 0
 
     cursor.execute("""
-    SELECT problema_principal
-    FROM analisis
-    ORDER BY id DESC
-    LIMIT 3
+        SELECT problema_principal
+        FROM analisis
+        ORDER BY id DESC
+        LIMIT 3
     """)
-
     ultimos = cursor.fetchall()
 
-from flask import session, redirect, url_for
+    # Contar cuál se repite más en los últimos 3
+    conteo = {}
+    for fila in ultimos:
+        problema = fila[0]
+        conteo[problema] = conteo.get(problema, 0) + 1
+
+    if conteo:
+        problema_reciente = max(conteo, key=conteo.get)
+    else:
+        problema_reciente = "N/A"
+
+    cursor.execute("""
+        SELECT problema_principal, COUNT(*)
+        FROM analisis
+        GROUP BY problema_principal
+    """)
+    datos_grafico = cursor.fetchall()
+
+    labels = [fila[0] for fila in datos_grafico]
+    valores = [fila[1] for fila in datos_grafico]
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        datos=datos,
+        total_analisis=total_analisis,
+        promedio=promedio,
+        ultimo_nivel=ultimo_nivel,
+        problema_frecuente=problema_frecuente,
+        frecuencia_problema=frecuencia_problema,
+        problema_reciente=problema_reciente,
+        labels=labels,
+        valores=valores
+    )
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
