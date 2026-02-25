@@ -5,9 +5,13 @@ from database import get_connection, create_tables, create_default_hotel
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_cambiar_en_produccion"
 
-# Crear tablas y hotel demo al iniciar
-create_tables()
-create_default_hotel()
+@app.before_request
+def initialize_database_once():
+    if not hasattr(app, "db_initialized"):
+        create_tables()
+        create_default_hotel()
+        app.db_initialized = True
+
 
 # ===============================
 # MOTOR DE ANÁLISIS
