@@ -157,7 +157,7 @@ def dashboard():
     total_analisis = cursor.fetchone()[0]
 
     cursor.execute("SELECT AVG(porcentaje) FROM analisis WHERE hotel_id = %s", (hotel_id,))
-    promedio = cursor.fetchone()[0]
+    promedio = cursor.fetchone()[0] or 0
 
     cursor.execute("""
         SELECT nivel_riesgo
