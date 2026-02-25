@@ -28,7 +28,6 @@ def create_tables():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
-    cursor.execute("DROP TABLE IF EXISTS analisis CASCADE;")
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS analisis (
