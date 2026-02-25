@@ -6,14 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_cambiar_en_produccion"
 
-@app.before_request
-def initialize_database_once():
-    if not hasattr(app, "db_initialized"):
-        create_tables()
-        create_default_hotel()
-        app.db_initialized = True
-
-
 # ===============================
 # MOTOR DE ANÁLISIS
 # ===============================
