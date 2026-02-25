@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime
 from database import get_connection, create_tables, create_default_hotel
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_cambiar_en_produccion"
@@ -242,16 +243,17 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
+        hashed_password = generate_password_hash(password)
 
         conn = get_connection()
         cursor = conn.cursor()
 
         # Crear usuario
         cursor.execute("""
-            INSERT INTO users (email, password_hash)
-            VALUES (%s, %s)
-            RETURNING id;
-        """, (email, password))
+        INSERT INTO users (email, password_hash)
+        VALUES (%s, %s)
+        RETURNING id;
+        """, (email, hashed_password))
 
         user = cursor.fetchone()
 
@@ -292,7 +294,7 @@ def login():
         cursor.close()
         conn.close()
 
-        if user and user[1] == password:
+        if user and check_password_hash(user[1], password):
             session["user_id"] = user[0]
             return redirect(url_for("dashboard"))
         else:
