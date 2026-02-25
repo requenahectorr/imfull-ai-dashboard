@@ -83,10 +83,15 @@ def analizar_reseñas_web(texto_reseñas):
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Obtener hotel_id del hotel demo
+    cursor.execute("SELECT id FROM hoteles WHERE nombre = %s;", ("Hotel Demo",))
+    hotel = cursor.fetchone()
+    hotel_id = hotel[0]
+
     cursor.execute("""
-        INSERT INTO analisis (fecha, problema_principal, nivel_riesgo, porcentaje)
-        VALUES (%s, %s, %s, %s)
-    """, (fecha, problema_principal, nivel_riesgo, porcentaje_principal))
+    INSERT INTO analisis (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje)
+    VALUES (%s, %s, %s, %s, %s)
+""", (hotel_id, fecha, problema_principal, nivel_riesgo, porcentaje_principal))
 
     conn.commit()
     cursor.close()
