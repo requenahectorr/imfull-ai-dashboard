@@ -15,6 +15,9 @@ create_default_hotel()
 
 def analizar_reseñas_web(texto_reseñas):
 
+    if "user_id" not in session:
+        return "Debes iniciar sesión."
+
     reseñas = [r.strip() for r in texto_reseñas.split("\n") if r.strip() != ""]
 
     if not reseñas:
@@ -69,7 +72,7 @@ def analizar_reseñas_web(texto_reseñas):
     fecha = datetime.now().strftime("%d/%m/%Y")
 
     informe = f"""
-    <h2>SISTEMA DE MONITORIZACIÓN OPERATIVA – HOTEL TGN</h2>
+    <h2>SISTEMA DE MONITORIZACIÓN OPERATIVA</h2>
     <p><strong>Fecha:</strong> {fecha}</p>
     <p><strong>Total reseñas:</strong> {total}</p>
     <p><strong>Problema prioritario:</strong> {problema_principal.capitalize()} ({porcentaje_principal:.1f}%)</p>
@@ -79,8 +82,16 @@ def analizar_reseñas_web(texto_reseñas):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM hoteles WHERE nombre = %s;", ("Hotel Demo",))
+    user_id = session.get("user_id")
+
+    cursor.execute("SELECT id FROM hoteles WHERE owner_id = %s;", (user_id,))
     hotel = cursor.fetchone()
+
+    if not hotel:
+        cursor.close()
+        conn.close()
+        return "No hay hotel asociado a este usuario."
+
     hotel_id = hotel[0]
 
     cursor.execute("""
@@ -101,6 +112,10 @@ def analizar_reseñas_web(texto_reseñas):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
     informe = ""
 
     if request.method == "POST":
@@ -116,33 +131,55 @@ def dashboard():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
+    user_id = session.get("user_id")
+
     conn = get_connection()
     cursor = conn.cursor()
 
+    # Obtener hotel del usuario
+    cursor.execute("SELECT id FROM hoteles WHERE owner_id = %s;", (user_id,))
+    hotel = cursor.fetchone()
+
+    if not hotel:
+        cursor.close()
+        conn.close()
+        return "No tienes hotel asociado."
+
+    hotel_id = hotel[0]
+
+    # Datos principales
     cursor.execute("""
         SELECT fecha, problema_principal, nivel_riesgo, porcentaje
         FROM analisis
+        WHERE hotel_id = %s
         ORDER BY id DESC
-    """)
+    """, (hotel_id,))
     datos = cursor.fetchall()
 
-    cursor.execute("SELECT COUNT(*) FROM analisis")
+    cursor.execute("SELECT COUNT(*) FROM analisis WHERE hotel_id = %s", (hotel_id,))
     total_analisis = cursor.fetchone()[0]
 
-    cursor.execute("SELECT AVG(porcentaje) FROM analisis")
+    cursor.execute("SELECT AVG(porcentaje) FROM analisis WHERE hotel_id = %s", (hotel_id,))
     promedio = cursor.fetchone()[0]
 
-    cursor.execute("SELECT nivel_riesgo FROM analisis ORDER BY id DESC LIMIT 1")
+    cursor.execute("""
+        SELECT nivel_riesgo
+        FROM analisis
+        WHERE hotel_id = %s
+        ORDER BY id DESC
+        LIMIT 1
+    """, (hotel_id,))
     ultimo = cursor.fetchone()
     ultimo_nivel = ultimo[0] if ultimo else "N/A"
 
     cursor.execute("""
-        SELECT problema_principal, COUNT(*) as total
+        SELECT problema_principal, COUNT(*)
         FROM analisis
+        WHERE hotel_id = %s
         GROUP BY problema_principal
-        ORDER BY total DESC
+        ORDER BY COUNT(*) DESC
         LIMIT 1
-    """)
+    """, (hotel_id,))
     resultado = cursor.fetchone()
 
     if resultado:
@@ -155,9 +192,10 @@ def dashboard():
     cursor.execute("""
         SELECT problema_principal
         FROM analisis
+        WHERE hotel_id = %s
         ORDER BY id DESC
         LIMIT 3
-    """)
+    """, (hotel_id,))
     ultimos = cursor.fetchall()
 
     conteo = {}
@@ -170,8 +208,9 @@ def dashboard():
     cursor.execute("""
         SELECT problema_principal, COUNT(*)
         FROM analisis
+        WHERE hotel_id = %s
         GROUP BY problema_principal
-    """)
+    """, (hotel_id,))
     datos_grafico = cursor.fetchall()
 
     labels = [fila[0] for fila in datos_grafico]
@@ -232,7 +271,6 @@ def login():
             FROM users
             WHERE email = %s
         """, (email,))
-
         user = cursor.fetchone()
 
         cursor.close()
