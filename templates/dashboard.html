@@ -1,108 +1,207 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard Histórico</title>
-    <a href="/logout">Cerrar sesión</a>
+    <title>Dashboard Ejecutivo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Georgia', serif;
+            background-color: #f8f6f2;
+            color: #2c2c2c;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 400;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #8a7d5c;
+            margin-bottom: 40px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border-top: 3px solid #bfa14a;
+        }
+
+        .kpi-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .risk-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .BAJO { background: #d4edda; color: #155724; }
+        .MODERADO { background: #fff3cd; color: #856404; }
+        .ALTO { background: #f8d7da; color: #721c24; }
+        .CRÍTICO { background: #5a0f0f; color: white; }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .logout a {
+            text-decoration: none;
+            color: #8a7d5c;
+            font-weight: bold;
+        }
+
+        canvas {
+            margin-top: 30px;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h1>Histórico de Análisis</h1>
+<div class="container">
 
-    <h2>Resumen</h2>
+    <div class="logout">
+        <a href="/logout">Cerrar sesión</a>
+    </div>
 
-    <p><strong>Total análisis:</strong> {{ total_analisis }}</p>
+    <h1>Informe Ejecutivo de Reputación</h1>
+    <div class="subtitle">Panel estratégico de monitorización operativa</div>
 
-    <p><strong>Nivel de riesgo actual:</strong>
-    {% if ultimo_nivel == "BAJO" %}
-        <span style="color:green;"><strong>{{ ultimo_nivel }}</strong></span>
-    {% elif ultimo_nivel == "MODERADO" %}
-        <span style="color:orange;"><strong>{{ ultimo_nivel }}</strong></span>
-    {% elif ultimo_nivel == "ALTO" %}
-        <span style="color:red;"><strong>{{ ultimo_nivel }}</strong></span>
-    {% elif ultimo_nivel == "CRÍTICO" %}
-        <span style="color:darkred;"><strong>{{ ultimo_nivel }}</strong></span>
-    {% else %}
-        {{ ultimo_nivel }}
-    {% endif %}
-    </p>
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
 
-    <p>
-        <strong>Problema más frecuente histórico:</strong>
-        {{ problema_frecuente }}
-        ({{ frecuencia_problema }} veces)
-    </p>
+        <div class="kpi-card">
+            <div class="kpi-title">Total Análisis</div>
+            <div class="kpi-value">{{ total_analisis }}</div>
+        </div>
 
-    <p>
-        <strong>Problema dominante en los últimos 3 análisis:</strong>
-        {{ problema_reciente }}
-    </p>
+        <div class="kpi-card">
+            <div class="kpi-title">Nivel de Riesgo Actual</div>
+            <div class="kpi-value">
+                <span class="risk-badge {{ ultimo_nivel }}">
+                    {{ ultimo_nivel }}
+                </span>
+            </div>
+        </div>
 
-    <p>
-        <strong>Promedio porcentaje problema:</strong>
-        {% if promedio %}
-            {{ "%.1f"|format(promedio) }}%
-        {% else %}
-            0%
-        {% endif %}
-    </p>
+        <div class="kpi-card">
+            <div class="kpi-title">Problema Recurrente</div>
+            <div class="kpi-value">{{ problema_frecuente }}</div>
+        </div>
 
-    <hr>
+        <div class="kpi-card">
+            <div class="kpi-title">Promedio Impacto</div>
+            <div class="kpi-value">
+                {{ "%.1f"|format(promedio) }}%
+            </div>
+        </div>
 
-    <h2>Distribución de Problemas</h2>
-    <canvas id="graficoProblemas" width="600" height="300"></canvas>
+    </div>
 
-    <hr>
+    <!-- GRÁFICO -->
+    <div class="section">
+        <h2>Distribución Histórica de Incidencias</h2>
+        <canvas id="graficoProblemas"></canvas>
+    </div>
 
-    <table border="1">
-        <tr>
-            <th>Fecha</th>
-            <th>Problema</th>
-            <th>Nivel de Riesgo</th>
-            <th>Porcentaje</th>
-        </tr>
+    <!-- TABLA -->
+    <div class="section">
+        <h2>Histórico Detallado</h2>
+        <table>
+            <tr>
+                <th>Fecha</th>
+                <th>Problema</th>
+                <th>Nivel</th>
+                <th>Impacto</th>
+            </tr>
+            {% for fila in datos %}
+            <tr>
+                <td>{{ fila[0] }}</td>
+                <td>{{ fila[1] }}</td>
+                <td>{{ fila[2] }}</td>
+                <td>{{ "%.1f"|format(fila[3]) }}%</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 
-        {% for fila in datos %}
-        <tr>
-            <td>{{ fila[0] }}</td>
-            <td>{{ fila[1] }}</td>
-            <td>{{ fila[2] }}</td>
-            <td>{{ "%.1f"|format(fila[3]) }}%</td>
-        </tr>
-        {% endfor %}
+</div>
 
-    </table>
+<script>
+    const ctx = document.getElementById('graficoProblemas');
 
-    <script>
-        const ctx = document.getElementById('graficoProblemas').getContext('2d');
-
-        const grafico = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {{ labels | tojson }},
-                datasets: [{
-                    label: 'Frecuencia de Problemas',
-                    data: {{ valores | tojson }},
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.6)',
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(75, 192, 192, 0.6)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ labels | tojson }},
+            datasets: [{
+                label: 'Frecuencia de Problemas',
+                data: {{ valores | tojson }},
+                backgroundColor: '#bfa14a'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 
 </body>
 </html>
