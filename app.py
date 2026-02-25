@@ -1,8 +1,11 @@
 from database import get_connection
 from flask import Flask, render_template, request
+from database import create_tables
 from datetime import datetime
 
 app = Flask(__name__)
+
+create_tables()
 
 # ====== MOTOR DE ANÁLISIS (versión simplificada web) ======
 
