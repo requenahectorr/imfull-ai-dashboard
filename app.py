@@ -6,13 +6,10 @@ from database import create_default_hotel
 
 app = Flask(__name__)
 
-@app.before_first_request
-def initialize_database():
-    try:
-        create_tables()
-        create_default_hotel()
-    except Exception as e:
-        print("DB init error:", e)
+from database import create_tables, create_default_hotel
+
+create_tables()
+create_default_hotel()
 
 # ====== MOTOR DE ANÁLISIS (versión simplificada web) ======
 
