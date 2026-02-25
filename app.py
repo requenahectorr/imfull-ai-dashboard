@@ -73,6 +73,9 @@ def analizar_reseñas_web(texto_reseñas):
     <p><strong>Nivel de riesgo:</strong> {nivel_riesgo}</p>
     """
 
+    from database import get_connection
+
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -81,6 +84,7 @@ def analizar_reseñas_web(texto_reseñas):
     """, (fecha, problema_principal, nivel_riesgo, porcentaje_principal))
 
     conn.commit()
+    cursor.close()
     conn.close()
 
     return informe
