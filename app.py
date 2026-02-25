@@ -70,14 +70,12 @@ def analizar_reseñas_web(texto_reseñas):
     <p><strong>Problema prioritario:</strong> {problema_principal.capitalize()} ({porcentaje_principal:.1f}%)</p>
     <p><strong>Nivel de riesgo:</strong> {nivel_riesgo}</p>
     """
-    import sqlite3
 
-    conn = sqlite3.connect("analisis.db")
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO analisis (fecha, problema_principal, nivel_riesgo, porcentaje)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
     """, (fecha, problema_principal, nivel_riesgo, porcentaje_principal))
 
     conn.commit()
@@ -100,9 +98,9 @@ def index():
 
 @app.route("/dashboard")
 def dashboard():
-    import sqlite3
+    from database import get_connection
 
-    conn = sqlite3.connect("analisis.db")
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT fecha, problema_principal, nivel_riesgo, porcentaje FROM analisis ORDER BY id DESC")

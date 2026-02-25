@@ -1,18 +1,7 @@
-import sqlite3
+import os
+import psycopg2
 
-def init_db():
-    conn = sqlite3.connect("analisis.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS analisis (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fecha TEXT,
-            problema_principal TEXT,
-            nivel_riesgo TEXT,
-            porcentaje REAL
-        )
-    """)
-
-    conn.commit()
-    conn.close()
+def get_connection():
+    database_url = os.environ.get("DATABASE_URL")
+    conn = psycopg2.connect(database_url)
+    return conn
