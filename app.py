@@ -242,11 +242,23 @@ def register():
         conn = get_connection()
         cursor = conn.cursor()
 
+        # Crear usuario
         cursor.execute("""
             INSERT INTO users (email, password_hash)
             VALUES (%s, %s)
-            ON CONFLICT (email) DO NOTHING;
+            RETURNING id;
         """, (email, password))
+
+        user = cursor.fetchone()
+
+        if user:
+            user_id = user[0]
+
+            # Crear hotel automáticamente
+            cursor.execute("""
+                INSERT INTO hoteles (nombre, ciudad, owner_id)
+                VALUES (%s, %s, %s)
+            """, ("Hotel de " + email, "Ciudad", user_id))
 
         conn.commit()
         cursor.close()
