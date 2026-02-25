@@ -6,6 +6,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_cambiar_en_produccion"
 
+@app.route("/health")
+def health():
+    return "OK"
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("ERROR GLOBAL:", e)
+    return "Error interno temporal", 500
+
 # ===============================
 # MOTOR DE ANÁLISIS
 # ===============================
