@@ -5,6 +5,7 @@ from datetime import datetime
 from database import create_default_hotel
 
 app = Flask(__name__)
+app.secret_key = "clave_super_secreta_cambiar_en_produccion"
 
 from database import create_tables, create_default_hotel
 
@@ -154,6 +155,31 @@ def dashboard():
     """)
 
     ultimos = cursor.fetchall()
+
+from flask import session, redirect, url_for
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO users (email, password_hash)
+            VALUES (%s, %s)
+            ON CONFLICT (email) DO NOTHING;
+        """, (email, password))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
 
     # Contar cuál se repite más en los últimos 3
     conteo = {}
