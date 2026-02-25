@@ -2,10 +2,12 @@ from database import get_connection
 from flask import Flask, render_template, request
 from database import create_tables
 from datetime import datetime
+from database import create_default_hotel
 
 app = Flask(__name__)
 
 create_tables()
+create_default_hotel()
 
 # ====== MOTOR DE ANÁLISIS (versión simplificada web) ======
 

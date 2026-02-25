@@ -43,3 +43,30 @@ def create_tables():
     conn.commit()
     cursor.close()
     conn.close()
+
+def create_default_hotel():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Crear usuario demo si no existe
+    cursor.execute("""
+        INSERT INTO users (email, password_hash)
+        VALUES (%s, %s)
+        ON CONFLICT (email) DO NOTHING;
+    """, ("demo@hotel.com", "hashedpassword"))
+
+    # Obtener id del usuario
+    cursor.execute("SELECT id FROM users WHERE email = %s;", ("demo@hotel.com",))
+    user = cursor.fetchone()
+    user_id = user[0]
+
+    # Crear hotel asociado si no existe
+    cursor.execute("""
+        INSERT INTO hoteles (nombre, ciudad, owner_id)
+        VALUES (%s, %s, %s)
+        ON CONFLICT DO NOTHING;
+    """, ("Hotel Demo", "Tarragona", user_id))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
