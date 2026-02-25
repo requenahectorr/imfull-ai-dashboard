@@ -1,77 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard Ejecutivo</title>
+    <title>Panel Ejecutivo</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body {
             margin: 0;
-            font-family: 'Georgia', serif;
-            background-color: #f8f6f2;
-            color: #2c2c2c;
+            font-family: "Georgia", serif;
+            background-color: #f4f1ea;
+            color: #2b2b2b;
         }
 
-        .container {
-            width: 90%;
+        .wrapper {
             max-width: 1200px;
-            margin: 40px auto;
+            margin: 60px auto;
+            padding: 0 40px;
+            animation: fadeIn 0.8s ease-in-out;
         }
 
-        h1 {
-            font-size: 32px;
-            font-weight: 400;
-            margin-bottom: 10px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .subtitle {
-            color: #8a7d5c;
-            margin-bottom: 40px;
-        }
-
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 50px;
         }
 
-        .kpi-card {
+        .topbar h1 {
+            font-weight: 400;
+            font-size: 34px;
+            letter-spacing: 1px;
+        }
+
+        .topbar a {
+            text-decoration: none;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: #8c7a42;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #9c8c5a;
+            margin-top: 8px;
+        }
+
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .kpi {
             background: white;
-            padding: 25px;
-            border-radius: 6px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border-top: 3px solid #bfa14a;
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            border-top: 3px solid #b89b4f;
         }
 
         .kpi-title {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 10px;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 15px;
         }
 
         .kpi-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
         }
 
-        .risk-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
+        .badge {
+            padding: 6px 14px;
+            border-radius: 30px;
             font-size: 13px;
             font-weight: bold;
+            display: inline-block;
         }
 
-        .BAJO { background: #d4edda; color: #155724; }
-        .MODERADO { background: #fff3cd; color: #856404; }
-        .ALTO { background: #f8d7da; color: #721c24; }
-        .CRÍTICO { background: #5a0f0f; color: white; }
+        .BAJO { background: #e8f5e9; color: #2e7d32; }
+        .MODERADO { background: #fff8e1; color: #9c6b00; }
+        .ALTO { background: #fdecea; color: #b71c1c; }
+        .CRÍTICO { background: #5d0c0c; color: white; }
 
         .section {
             background: white;
-            padding: 30px;
-            border-radius: 6px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            margin-bottom: 40px;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            margin-bottom: 50px;
+        }
+
+        .section h2 {
+            font-weight: 400;
+            margin-bottom: 30px;
         }
 
         table {
@@ -81,67 +112,81 @@
 
         table th {
             text-align: left;
-            padding: 12px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #ddd;
-            font-weight: 600;
         }
 
         table td {
-            padding: 12px;
+            padding: 15px 0;
             border-bottom: 1px solid #eee;
         }
 
-        .logout {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-
-        .logout a {
-            text-decoration: none;
-            color: #8a7d5c;
-            font-weight: bold;
+        table tr:hover {
+            background: #faf8f3;
         }
 
         canvas {
-            margin-top: 30px;
+            margin-top: 20px;
         }
+
+        @media (max-width: 900px) {
+            .kpi-section {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .kpi-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="wrapper">
 
-    <div class="logout">
+    <div class="topbar">
+        <div>
+            <h1>Panel Ejecutivo de Reputación</h1>
+            <div class="subtitle">Monitorización estratégica de desempeño operativo</div>
+        </div>
         <a href="/logout">Cerrar sesión</a>
     </div>
 
-    <h1>Informe Ejecutivo de Reputación</h1>
-    <div class="subtitle">Panel estratégico de monitorización operativa</div>
+    <!-- KPI -->
+    <div class="kpi-section">
 
-    <!-- KPI CARDS -->
-    <div class="kpi-grid">
-
-        <div class="kpi-card">
+        <div class="kpi">
             <div class="kpi-title">Total Análisis</div>
             <div class="kpi-value">{{ total_analisis }}</div>
         </div>
 
-        <div class="kpi-card">
-            <div class="kpi-title">Nivel de Riesgo Actual</div>
+        <div class="kpi">
+            <div class="kpi-title">Nivel de Riesgo</div>
             <div class="kpi-value">
-                <span class="risk-badge {{ ultimo_nivel }}">
+                <span class="badge {{ ultimo_nivel }}">
                     {{ ultimo_nivel }}
                 </span>
             </div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi">
             <div class="kpi-title">Problema Recurrente</div>
-            <div class="kpi-value">{{ problema_frecuente }}</div>
+            <div class="kpi-value">
+                {{ problema_frecuente }} 
+                <span style="font-size:14px;color:#777;">
+                    ({{ frecuencia_problema }} veces)
+                </span>
+            </div>
         </div>
 
-        <div class="kpi-card">
+        <div class="kpi">
             <div class="kpi-title">Promedio Impacto</div>
             <div class="kpi-value">
                 {{ "%.1f"|format(promedio) }}%
@@ -158,7 +203,7 @@
 
     <!-- TABLA -->
     <div class="section">
-        <h2>Histórico Detallado</h2>
+        <h2>Histórico de Análisis</h2>
         <table>
             <tr>
                 <th>Fecha</th>
@@ -166,11 +211,16 @@
                 <th>Nivel</th>
                 <th>Impacto</th>
             </tr>
+
             {% for fila in datos %}
             <tr>
                 <td>{{ fila[0] }}</td>
                 <td>{{ fila[1] }}</td>
-                <td>{{ fila[2] }}</td>
+                <td>
+                    <span class="badge {{ fila[2] }}">
+                        {{ fila[2] }}
+                    </span>
+                </td>
                 <td>{{ "%.1f"|format(fila[3]) }}%</td>
             </tr>
             {% endfor %}
@@ -187,17 +237,18 @@
         data: {
             labels: {{ labels | tojson }},
             datasets: [{
-                label: 'Frecuencia de Problemas',
                 data: {{ valores | tojson }},
-                backgroundColor: '#bfa14a'
+                backgroundColor: '#b89b4f',
+                borderRadius: 6
             }]
         },
         options: {
-            responsive: true,
             plugins: {
-                legend: {
-                    display: false
-                }
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: "#eee" } }
             }
         }
     });
